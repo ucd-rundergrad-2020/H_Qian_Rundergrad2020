@@ -279,7 +279,7 @@ For graph 4
 
 ```r
 ggplot()+
-  geom_point(data=mpg, mapping = aes(x=displ, y=hwy, color=drv), , stroke =3, show.legend = TRUE)+ geom_smooth(data=mpg, mapping = aes(x=displ, y=hwy), color="blue", se=FALSE)
+  geom_point(data=mpg, mapping = aes(x=displ, y=hwy, color=drv), stroke =3, show.legend = TRUE)+ geom_smooth(data=mpg, mapping = aes(x=displ, y=hwy), color="blue", se=FALSE)
 ```
 
 ```
