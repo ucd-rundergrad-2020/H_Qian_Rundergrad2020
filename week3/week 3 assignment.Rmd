@@ -1,0 +1,153 @@
+---
+title: "week 3 assignment"
+author: "Hongtao Qian"
+date: "2020/4/29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyverse)
+library(nycflights13)
+```
+
+4.4.1:  
+The name we have given a value is "my_variable", but the code I type to get the value is "my_varıable" which is "ı" instead of "i", (but how to type "ı"?).  
+
+4.4.2:  
+```{r}
+library(tidyverse)
+ggplot(data=mpg)+geom_point(mapping=aes(x=displ, y=hwy))
+filter(mpg, cyl==8)
+filter(diamonds, carat>3)
+```
+
+This is really tricky. The second code mistakes the "data" to "dota". The third code mistakes the "filter" to "fliter" and misses one "=". THe forth code misses "s" attached to the data name"diamaonds" and there are no dataset called "diamond".  
+
+4.4.3:  
+This tells the use of different shortcut key combination. It is quite useful. 
+
+5.2.4.1:  
+```{r}
+filter(flights, arr_delay>=2)
+filter(flights, month==7|month==8|month==9)
+filter(flights, arr_delay>=2 & dep_delay==0)
+filter(flights, (dep_time>0 & dep_time<=600) | dep_time==2400)
+```
+
+5.2.4.2:  
+```{r}
+filter(flights, between(month,7,9))
+filter(flights, between(dep_time,0,600)|dep_time==2400)
+```
+
+Only the code for 2 and 4 can be modified by "between". 
+
+5.2.4.3:  
+```{r}
+filter(flights, is.na(dep_time))
+```
+
+These flights should be cancelled ones due to lack of numerous variables on one row. 
+
+5.3.1.1:  
+```{r}
+arrange(flights, desc(is.na(dep_time)))
+```
+
+5.3.1.2:  
+```{r}
+arrange(flights, desc(dep_delay))
+arrange(flights, dep_delay)
+```
+
+5.3.1.3:  
+I do not know how to accomplish it with arrange only. 
+
+5.3.1.4:  
+```{r}
+arrange(flights, distance)
+arrange(flights, desc(distance))
+```
+
+The first chart can help to find the shortest and the second one can help to find the farthest.  
+5.4.1.1:  
+```{r}
+select(flights, dep_time,dep_delay:arr_time,arr_delay)
+select(flights, dep_time, dep_delay,arr_time,arr_delay)
+select(flights, starts_with("dep_"),starts_with("arr_"))
+select(flights, contains("arr"),contains("dep"),-contains("sched"), -carrier)
+```
+
+5.4.1.2: 
+```{r}
+select(flights, year,year,month,day)
+```
+
+nothing happens. Why can you be so smart here??  
+
+5.4.1.3:  
+```{r}
+vars <- c("year", "month", "day", "dep_delay", "arr_delay")
+select(flights,one_of(vars))
+```
+
+This function helps to show all variables in the vector.  
+
+5.4.1.4:  
+```{r}
+select(flights, contains("TIME"))
+```
+
+5.5.2.1:  
+```{r}
+transmute(flights, dep_time, dep_time_minute=(dep_time%/%100)*60+dep_time%%100, sched_dep_time, sched_dep_time_minute=(sched_dep_time%/%100)*60+sched_dep_time%%100)
+```
+
+5.5.2.2:  
+```{r}
+transmute(flights, air_time, time=arr_time-dep_time)
+```
+
+The time for "arr_time"-"dep_time" becomes very strange because the "air_time" is counting the minutes in the air while "arr_time" and "dep_time" have the other format of "hour-minute" whose direct calculation can lead to a mess. 
+
+5.5.2.3:  
+```{r}
+select(flights, dep_time, sched_dep_time, dep_delay)
+```
+
+dep_delay=dep_time-sched_dep_time
+
+5.5.2.4:  
+```{r}
+arrange(flights, desc(dep_delay))
+```
+
+I do not know how to use the function "mid_rank()" but I think I can get the same consequence by the "arrange()" function.  
+
+5.5.2.5
+```{r}
+1:3+1:10
+```
+
+The error code??  
+
+5.6.7.5:  
+```{r}
+not_cancelled<-flights %>%
+  filter(!is.na(dep_delay),!is.na(arr_delay))
+delays<-not_cancelled%>%
+  group_by(carrier)%>%
+  summarise(n=n(),delay=mean(arr_delay, na.rm = TRUE))%>%
+  filter(n>=25)
+ggplot(data=delays, mapping = aes(x=n, y=delay, color=carrier))+geom_point()
+
+delays<-not_cancelled%>%
+  group_by(dest)%>%
+  summarise(n=n(),delay=mean(arr_delay, na.rm = TRUE))%>%
+  filter(n>=25)
+ggplot(data=delays, mapping = aes(x=n, y=delay, color=dest))+geom_point()
+```
+
+I get that the carrier F9 should have the worst delay. 
