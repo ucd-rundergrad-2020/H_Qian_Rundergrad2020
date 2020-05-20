@@ -1,0 +1,139 @@
+---
+title: "week 5 assignment"
+author: "Hongtao Qian"
+date: "2020/5/16"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+```
+
+## 10.5.1: How can you tell if an object is a tibble? (Hint: try printing mtcars, which is a regular data frame).  
+```{r}
+print(mtcars)%>%
+  .$"cyl"
+```
+
+## I think I can see the chart with columns and rows when I code "print()" and I can see a row if I want to extract the column through ".$".  
+
+## 10.5.2: Compare and contrast the following operations on a data.frame and equivalent tibble. What is different? Why might the default data frame behaviours cause you frustration? 
+```{r}
+df <- data.frame(abc = 1, xyz = "a")
+df$x
+df[, "xyz"]
+df[, c("abc", "xyz")]
+```
+```{r}
+tib<-tibble(abc=1, xyz="a")
+tib[,"xyz"]
+tib[,c("abc","xyz")]
+```
+
+## When I type "tib$x", I can only get the null consequence, so I delete this line and I also can get two meaningful diagrams. The only distinction is the formating of the consequence of the first diagram. Is it a vector for data.frame?  
+
+## 10.5.4: Practice referring to non-syntactic names in the following data frame by:
+
+Extracting the variable called 1.
+
+Plotting a scatterplot of 1 vs 2.
+
+Creating a new column called 3 which is 2 divided by 1.
+
+Renaming the columns to one, two and three.  
+```{r}
+what<-tibble(`1`=1:10, `2`=`1`*2+rnorm(length(`1`)))%>%
+  print()
+what[["1"]]
+ggplot(what)+
+geom_point(mapping=aes(x =`1`,y =`2`))
+what[["3"]]<-what$`2`/what$`1`
+print(what)
+```
+```{r}
+what <- rename(what, one = `1`, two = `2`, three = `3`)%>%
+  print()
+```
+
+## I have a problem when I try to use the code "mutate" because I seem not to be allowed to "add the column" to the dataset through "mutate" but it really shows there is an extra column in the dataset. 
+```{r}
+mutate(what, `3`=two/one)
+```
+
+## 10.5.5: What does tibble::enframe() do? When might you use it?
+```{r}
+enframe(c(a=1, b=2, c=34, z=789))
+```
+
+## It can convert two equally long vectors into a tibble. 
+
+## 11.2.2.1: What function would you use to read a file where fields were separated with “|”?
+
+## I google this and I find it is for "read_delim()" but can you give an example about how to use it?  
+
+## 11.2.2.4: Sometimes strings in a CSV file contain commas. To prevent them from causing problems they need to be surrounded by a quoting character, like " or '. By default, read_csv() assumes that the quoting character will be ". What argument to read_csv() do you need to specify to read the following text into a data frame? 
+```{r}
+read_csv("x,y\n1,'a,b'", quote="'")
+```
+
+##11.2.2.5: Identify what is wrong with each of the following inline CSV files. What happens when you run the code?  
+```{r}
+read_csv("a,b\n1,2,3\n4,5,6")
+read_csv("a,b,c\n1,2\n1,2,3,4")
+read_csv("a,b\n\"1")
+read_csv("a,b\n1,2\na,b")
+read_csv("a;b\n1;3")
+```
+
+## For the diagram one, there are three values for each row but only two columns, so the last column has disappeared.  
+## For the diagram two, there are only two columns, so for the first vector row, the last missing one is filled with "NA"; for the second vector row, the last excessive one disappears.  
+## For the diagram three, there are two columns but there is only one value in the vector row, so the missing value is filled with "NA".  
+## For the diagram four, the value is the as the column name and there should be some problems with the value.  
+## For the diagram five, the ";" is used instead of "," to separate different columns but this cannot be recognized as "," by the studio, so the tibble will have only one column and one row.  
+
+## 11.3.5.1: What are the most important arguments to locale()?  
+## I think it is absolutely important arguments for all types of data import (, but I think it is better to process the data in advance through "csv" document).  
+
+## 11.3.5.2: What happens if you try and set decimal_mark and grouping_mark to the same character? What happens to the default value of grouping_mark when you set decimal_mark to ","? What happens to the default value of decimal_mark when you set the grouping_mark to "."?
+
+## It is an error. 
+```{r}
+locale(decimal_mark=",")
+```
+
+## It tends to let the period "." to be figured as grouping mark.   
+```{r}
+locale(grouping_mark = ",")
+```
+
+## It tends to lect the period "." to be digured as decimal mark. 
+
+## 11.3.5.3: I didn’t discuss the date_format and time_format options to locale(). What do they do? Construct an example that shows when they might be useful.
+
+## Sorry, I think I have no idea!!!!!!
+
+## 11.3.5.7: Generate the correct format string to parse each of the following dates and times
+```{r}
+d1 <- "January 1, 2010"
+d2 <- "2015-Mar-07"
+d3 <- "06-Jun-2017"
+d4 <- c("August 19 (2015)", "July 1 (2015)")
+d5 <- "12/30/14" # Dec 30, 2014
+t1 <- "1705"
+t2 <- "11:15:10.12 PM"
+
+parse_date(d1, "%B %d, %Y")
+parse_date(d2, "%Y-%b-%d")
+parse_date(d3, "%d-%b-%Y")
+parse_date(d4, "%B %d (%Y)")
+parse_date(d5, "%m/%d/%y")
+parse_time(t1, "%H%M")
+parse_time(t2, "%H:%M:%OS %p")
+```
+
+
+
