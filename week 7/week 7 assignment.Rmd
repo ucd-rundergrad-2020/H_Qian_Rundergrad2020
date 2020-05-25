@@ -1,0 +1,151 @@
+---
+title: "week7 assignment"
+author: "Hongtao Qian"
+date: "2020/5/30"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyverse)
+library(nycflights13)
+library(Lahman)
+library(babynames)
+library(fueleconomy)
+library(nasaweather)
+library(maps)
+library(hexbin)
+```
+
+_13.2.1.1: Imagine you wanted to draw (approximately) the route each plane flies from its origin to its destination. What variables would you need? What tables would you need to combine?_
+
+I need the the variable "origin" and "dest" from the chart "flights", and the exact location of each airport with longtitude "lon" and latitude "lat" from the chart "airports". 
+```{r}
+flights_route<-flights%>%
+  inner_join(select(airports, c(origin=faa, origin_lon=lon, origin_lat=lat)), by="origin") %>%
+  inner_join(select(airports, c(dest=faa, dest_lon=lon, dest_lat=lat)), by="dest") %>%
+  glimpse()
+```
+## I have some problem: why I cannot conceal the column not selected by the code? 
+
+_13.2.1.2: I forgot to draw the relationship between weather and airports. What is the relationship and how should it appear in the diagram? _
+
+I think the column "origin" in the table "weather" should be the part of the column "faa" in the table "airports" and the column "origin" can drop if different charts will be combined. 
+
+_13.2.1.3: Weather only contains information for the origin (NYC) airports. If it contained weather records for all airports in the USA, what additional relation would it define with flights?_ 
+
+It can be really crazy because the name of the row will be each flights flying from the airport NYC, so there will be different columns as the sepcific departure condition "year"+"month" +"day"+"dep_time" and the contemporary weather condition which remains in the original table "weather", but there are new columns as the specific arrival condition "year"+"month" +"day"+"arr_time" and the contemporary weathr conditions to be added into the table. 
+
+_13.2.1.4: We know that some days of the year are “special”, and fewer people than usual fly on them. How might you represent that data as a data frame? What would be the primary keys of that table? How would it connect to the existing tables?_ 
+```{r}
+special_day<-tribble(
+  ~year, ~month, ~day, ~date_name,
+  2013, 01, 01, "New Year"
+)
+```
+I would create a new chart to seprate the normal day data and the holiday data. (I cannot remembrer all American holidays, so there is New Year only.)
+
+_13.3.1.1: Add a surrogate key to flights._
+```{r}
+flights%>%
+  arrange(year, month, day, origin, dest, tailnum, carrier)%>%
+  mutate(flights_No.=row_number())
+```
+I give each different flights a unique integral number for identification. 
+
+_13.3.1.2: Identify the keys in the following datasets_
+```{r}
+Batting%>%
+  count(playerID, yearID, stint)%>%
+  filter(n>1)
+```
+For this dataset, the columns (playerID, yearID) are not sufficient to be primary keys because some players may play in different team, so only columns (playerID, yearID, stint) can be primary keys. 
+```{r}
+babynames%>%
+  count(name, year, sex)%>%
+  filter(n>1)
+```
+For this dataset, the columns (name, year) are not sufficient to be primary keys because both boys and girls can be given the same names while sex is separated in this dataset, so only columns (name, year, sex) can be primary keys. 
+
+_13.4.6.1: Compute the average delay by destination, then join on the airports data frame so you can show the spatial distribution of delays._
+```{r}
+average_delay<-flights%>%
+  group_by(dest)%>%
+  summarise(delay=mean(arr_delay, na.rm = TRUE))%>%
+  left_join(airports, by=c(dest="faa"))%>%
+  print()
+average_delay%>%
+  ggplot(aes(lon, lat, color=delay)) +
+  borders("state") +
+  geom_point() +
+  coord_quickmap()
+```
+The last line of code is tricky because in table "airports", it is "faa" while in table "flights", it is "dest". 
+
+_13.4.6.2: Add the location of the origin and destination (i.e. the lat and lon) to flights._
+```{r}
+location<-airports%>%
+  select(faa, lon, lat)
+flights%>%
+  select(year, month, day, origin, dest)%>%
+  left_join(location, by=c(origin="faa"))%>%
+  left_join(location, by=c(dest="faa"))
+```
+
+_13.5.1.2: Filter flights to only show flights with planes that have flown at least 100 flights._
+```{r}
+plane_100 <-flights%>%
+  filter(!is.na(tailnum))%>%
+  group_by(tailnum)%>%
+  count()%>%
+  filter(n>=100)%>%
+  print(
+  )
+```
+## I think the code "semi_join" is necessary in this chunk. 
+
+_13.5.1.4: Find the 48 hours (over the course of the whole year) that have the worst delays. Cross-reference it with the weather data. Can you see any patterns?_
+```{r}
+worst_hours<-flights%>%
+  mutate(hr=sched_dep_time %/% 100)%>%
+  group_by(origin, year, month, day, hr)%>%
+  summarize(arr_dep_delay=mean(dep_delay, na.rm=TRUE))%>%
+  arrange(desc(arr_dep_delay))%>%
+  head(48)%>%
+  print()
+worst_weather<-semi_join(weather, worst_hours, by=c("origin", "year", "month", "day"))%>%
+  print()
+ggplot(data=worst_weather,aes(wind_speed, precip, color=temp))+
+  geom_point()
+```
+
+_28.2.1.1: Create one plot on the fuel economy data with customised title, subtitle, caption, x, y, and colour labels._
+```{r}
+ggplot(vehicles, aes(displ, hwy))+
+  geom_point(aes(color=fuel))+
+  geom_smooth(se=FALSE)+
+  labs(x="Engine displacement (liter)", y="Highway fuel economy (mpg)", color="Fuel type", title = "Highway fuel economy decreases with the engine displacement", subtitle = "All kinds of vehicles are included", caption = "Data from fueleconomy.gov")
+```
+
+_28.4.4.1: Why doesn’t the following code override the default scale?_
+```{r}
+df <- tibble(
+  x = rnorm(10000),
+  y = rnorm(10000))
+ggplot(df, aes(x, y)) +
+  geom_hex() +
+  scale_fill_gradient(low = "white", high = "red") +
+  coord_fixed()
+```
+It should be "scale_fill_gradient" instead of "scale_colour_gradient". 
+
+_28.4.4.4: Use override.aes to make the legend on the following plot easier to see._
+```{r}
+ggplot(diamonds, aes(carat, price)) +
+  geom_point(aes(colour = cut), alpha = 1/20)+
+  guides(colour=guide_legend(nrow=1, override.aes = list(alpha=1)))+
+  theme(legend.position = "bottom")
+```
